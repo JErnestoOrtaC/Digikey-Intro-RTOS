@@ -1,4 +1,4 @@
-
+//
 //This is for selecting the unicore of our esp32
 #if CONFIG_FREERTOS_UNICORE
   static const BaseType_t app_cpu =0;
@@ -10,14 +10,19 @@
 //TaskHandle_t task1Handler = NULL;
 
 //Queue
-/*static const u_int8_t msg_queue_len = 5;
-static QueueHandle_t msg_queue;*/
+static const u_int8_t msg_queue_len = 5;
+static QueueHandle_t msg_queue;
 
 //tasks
 
 void Task1(void *parameter){  
   //can initialize Task1 variables here as a locale setup for the Task
+  int item=0;
   while(1){
+    //Task1 loop
+    if( xQueueReceive(msg_queue, (void *)&item, 0) == pdTRUE){
+      Serial.println(item);
+    }
     vTaskDelay(1000/ portTICK_PERIOD_MS);
   }
 }
@@ -36,7 +41,7 @@ void setup(){
   Serial.println(uxTaskPriorityGet(NULL));
 
 //create queue
-  //msg_queue = xQueueCreate(msg_queue_len, sizeof(int));
+  msg_queue = xQueueCreate(msg_queue_len, sizeof(int));
 
   //task definement
   xTaskCreatePinnedToCore(
@@ -52,5 +57,11 @@ void setup(){
 }
 
 void loop(){
+  static int num =0;
 
+  if(xQueueSend(msg_queue, (void *)&num, 10) != pdTRUE){
+    Serial.print("Queue full");
+  }
+  num++;
+  vTaskDelay(500/ portTICK_PERIOD_MS);
 }
